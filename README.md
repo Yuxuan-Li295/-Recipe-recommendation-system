@@ -16,3 +16,12 @@ Have Milestone 2 proposal as pdf file in Milestone 2 directory.
 
 ### -- Milestone 3
 Have 10+ queries as txt file in Milestone 3 directory.
+
+## Colab repository
+https://drive.google.com/drive/folders/1wkJLJDAFukA6iBm3zGEZTf5BiMADPqbu?usp=sharing
+
+And this repository has been set visible to everyone in the SEAS department.
+
+This colab contains the data wrangling part of the dataset and all the preprocessing that needed to be done by python.
+
+We also include the necessary pre-computation in order to accelerate the query speed.
