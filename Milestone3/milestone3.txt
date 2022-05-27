@@ -1,0 +1,420 @@
+Credential:
+Host:projectdatabase.cvhhgh9locjv.us-east-1.rds.amazonaws.com
+username:admin
+password:550ProjectDatabase
+
+
+Summary:
+We have 4 queries which will take more than 20 seconds to run. They are #Query 9: --23s, #Query 10: -- 27s, #Query 12 -- 27s, #Query 13 - 32s.
+
+Moreover, some of the queries we wrote, are also complex, though it takes slightly less than 20s. For example, #Query 4 and #Query 5. They each take around 15-17s. 
+
+Note:
+In the following queries and some of the descriptions, we used the actual number for filters, e.g. rating > 4.5, but this will be more flexible after we set up the web application. (We will allow the users to put the threshold.)
+# ---------------------- First 5 queries are for pastry dataset ------------
+
+# Query 1: Display the picture of the recipe:
+SELECT RecipePhoto
+FROM A_Photo
+        JOIN A_RecipeInfo ARI on A_Photo.RecipeID = ARI.RecipeID
+WHERE RecipeName = 'Light Oat Bread Recipe';
+
+
+
+Description1: This query is used to search for the picture of the recipe according to the recipe name. In the actual application, the user can click the name of the recipe on the recipe display table, then the detailed information including the recipe photo will be displayed.
+
+
+
+#Query 2: Display the instructions of the recipe
+SELECT Ingredients, Directions
+FROM A_CookBook
+        JOIN A_RecipeInfo ARI on ARI.RecipeID = A_CookBook.RecipeID
+WHERE RecipeName = 'Light Oat Bread Recipe';
+
+
+
+Description2: This query is used to display the instructions of the recipe. The instruction means the ingredients of the recipe and the steps which the user needs to follow. It is together with `Query 2`, which is part of the 'detailed information' of the recipe.
+
+
+
+# Query 3
+SELECT RecipeName, Comment
+FROM A_Reviews
+        JOIN A_RecipeInfo ARI on ARI.RecipeID = A_Reviews.RecipeID
+WHERE RecipeName = 'Honey Cranberry Oat Bread Recipe';
+
+
+
+#Description3: This query is used to find reviews according to the given recipe name. Used in the scenario where the user clicks a specific recipe (so get full recipe name as input) and displays all the comments for that recipe.
+
+
+
+#Query 4: Search for the related recipe according to the recipe name
+WITH Rating_T AS (SELECT RecipeID, AVG(Rate) AS AVGRating, COUNT(*) AS Total_Review
+                 FROM A_Reviews
+                 GROUP BY RecipeID
+)
+SELECT RecipeName, Author, PrepareTime, CookTime, TotalTime, AVGRating, Total_Review
+FROM A_RecipeInfo
+        JOIN A_CookingTime ACT on A_RecipeInfo.RecipeID = ACT.RecipeID
+        LEFT JOIN Rating_T on Rating_T.RecipeID = A_RecipeInfo.RecipeID
+WHERE RecipeName LIKE '%%'
+ AND PrepareTime > 0
+ AND CookTime > 0
+ AND TotalTime > 0
+ AND AVGRating > 4.5
+ORDER BY AVGRating DESC;
+
+
+
+Description4: This query is used to search for the recipe according to the recipe name. In addition, we can filter the `PrepareTime`, `CookTime`, `TotalTime` by range. In the actual web application, we will deploy this by using slide bars.
+
+
+
+#Query 5: Search by ingredients
+WITH Rating_T AS (SELECT RecipeID, AVG(Rate) AS AVGRating, COUNT(*) AS Total_Review
+                 FROM A_Reviews
+                 GROUP BY RecipeID
+)
+SELECT RecipeName,
+      Author,
+      PrepareTime,
+      CookTime,
+      TotalTime,
+      AVGRating,
+      Total_Review,
+      Ingredients
+FROM A_RecipeInfo
+        JOIN A_CookingTime ACT on A_RecipeInfo.RecipeID = ACT.RecipeID
+        LEFT JOIN Rating_T on Rating_T.RecipeID = A_RecipeInfo.RecipeID
+        JOIN A_CookBook ACB on A_RecipeInfo.RecipeID = ACB.RecipeID
+WHERE PrepareTime > 0
+ AND CookTime > 0
+ AND TotalTime > 0
+ AND AVGRating > 4.5
+GROUP BY RecipeName
+HAVING COUNT(DISTINCT CASE
+                         WHEN Ingredients LIKE '%tomato%' THEN 1 END) = 1
+  AND COUNT(DISTINCT CASE
+                         WHEN Ingredients LIKE '%peppers%' THEN 1 END) = 1
+  AND COUNT(DISTINCT CASE
+                         WHEN Ingredients LIKE '%garlic%' THEN 1 END) = 0
+ORDER BY AVGRating
+       DESC;
+
+
+
+
+Description5: This query is used to search fitted recipes by filtering prepare time, cook time, total time and average rating as 'slide bar' input. We will also filter the recipe by wanted ingredients and unwanted ingredients. In the above example, we want tomato and peppers, and don't want garlic.
+
+
+
+
+# ---------------------- Following queries are for main dish dataset ------------
+
+#Query 6
+SELECT Name, rate
+FROM B_Recipe
+WHERE Name LIKE '%butter%'
+   or Name LIKE '%rice%'
+   or Name LIKE '%noodle%'
+ORDER BY rate DESC
+LIMIT 30;
+
+
+
+Description6: : Select 30 dishes with the name and the rate of the eligible recipes(staple food.
+
+
+
+# Query 7
+With Contribute AS (SELECT B_Recipe.Contributor_Id AS Id, B_USER.Name AS Name
+                    FROM B_Recipe
+                             JOIN B_USER on B_Recipe.Contributor_Id = B_USER.User_Id
+                    GROUP BY B_Recipe.Contributor_Id)
+SELECT B_Recipe.Recipe_Id,
+       B_Recipe.Contributor_Id,
+       B_Recipe.Rate,
+       Contribute.Name,
+       B_Recipe.Name,
+       B_Review_Belong_To.Review_Content,
+       B_Cook_information.Minutes
+FROM B_Recipe
+         JOIN Contribute on Contribute.Id = B_Recipe.Recipe_Id
+         LEFT JOIN B_Review_Belong_To on B_Review_Belong_To.Recipe_Id = B_Recipe.Recipe_Id
+         JOIN B_Cook_information on B_Recipe.Recipe_Id = B_Cook_information.Cook_Id
+WHERE B_Recipe.Rate > 4.25
+  AND Minutes > 100
+GROUP BY B_Recipe.Name;
+
+
+
+Description7: This query is used to search for the recipe according to the recipe rate and the cooking time. In addition, we can filter the 'Contributor_Id', 'Review_Content'. In the actual web applications, we will deploy this by using slide bars. 
+
+
+
+# Query 8
+SELECT r.Name, r.Recipe_Id
+FROM B_Recipe AS r
+         INNER JOIN B_Ingredients AS ri
+                    ON r.Recipe_Id = ri.Ingredient_Id
+         INNER JOIN B_Nutrition AS i
+                    ON r.Recipe_Id = i.Nutrition_Id
+WHERE ri.Ingredient_Name LIKE '%butter%'
+   or ri.Ingredient_Name LIKE '%penne%'
+   or ri.Ingredient_Name LIKE '%onion%'
+    AND r.rate > 4
+#In case two recipe with the same name
+GROUP BY r.Recipe_Id, r.Name
+HAVING
+#must contain both these
+        COUNT(DISTINCT ri.Ingredient_Name LIKE '%onion%' and ri.Ingredient_Name LIKE '%penne%') > 0
+
+   AND MAX(CASE WHEN ri.Ingredient_Name LIKE '%butter%' THEN 1 ELSE 0 END) = 0;
+
+
+
+Description8: According to the user's eating preference. For example: I like eating onion and penne but do not like butter. Provided the user: the name and ID of the corresponding recipes that is not too bad with the rating greater than 4. 
+
+
+
+#Query 9: --23s
+SELECT *
+FROM (
+         SELECT B_Recipe.Recipe_Id AS ID1,
+                B_Recipe.Contributor_Id,
+                B_Recipe.Rate,
+                B_Recipe.Name      AS NAME2,
+                B_Review_Belong_To.Review_Content,
+                B_Cook_information.Minutes
+         FROM B_Recipe
+                  LEFT JOIN B_Review_Belong_To on B_Review_Belong_To.Recipe_Id = B_Recipe.Recipe_Id
+                  JOIN B_Cook_information on B_Recipe.Recipe_Id = B_Cook_information.Cook_Id
+                  JOIN B_Nutrition BN on B_Recipe.Recipe_Id = BN.Nutrition_Id
+         WHERE B_Recipe.Rate > 3.25
+            or Minutes > 100
+            or Steps LIKE '%2%'
+            or Steps LIKE '%flour%'
+         GROUP BY B_Recipe.Name, Minutes
+         ORDER BY NAME2 DESC) y
+GROUP BY ID1;
+
+
+
+Description9: According to the user’s preference given the certain rate range, cook time and food ingredient display the ID, contributor_ID, review and cook time of the recipe.
+
+
+
+#Query 10: -- 27s
+WITH Rating_T AS (SELECT Recipe_ID, Rate / COUNT(*) AS AVGRating, COUNT(*) AS Total_Review
+                  FROM B_Review_Belong_To
+                  GROUP BY Recipe_ID
+)
+SELECT B_Recipe.Name AS NAME1,
+       B_USER.Name,
+       B_Cook_information.Minutes,
+       Rating_T.AVGRating,
+       Rating_T.Total_Review,
+       B_Review_Belong_To.Review_Content
+FROM B_Recipe
+-- we've used left join to include also countries without any call
+         LEFT JOIN B_Nutrition on B_Recipe.Recipe_Id = B_Nutrition.Nutrition_Id
+         LEFT JOIN B_Cook_information on B_Recipe.Recipe_Id = B_Cook_information.Cook_Id
+         LEFT JOIN B_Ingredients ON B_Ingredients.Ingredient_Id = B_Recipe.Recipe_Id
+         LEFT JOIN B_Review_Belong_To on B_Recipe.Recipe_Id = B_Review_Belong_To.Recipe_Id
+         LEFT JOIN B_USER on B_Recipe.Contributor_Id = B_USER.User_Id
+         LEFT JOIN Rating_T on B_Recipe.Recipe_Id = Rating_T.Recipe_Id
+-- filter out only countries having an average call duration > average call duration of all calls
+WHERE (EXISTS(
+               SELECT *
+               FROM B_USER
+               WHERE B_USER.Number_of_Ratings > 100
+               ORDER BY Number_of_Ratings
+           ) and EXISTS(SELECT * FROM B_Cook_information WHERE B_Cook_information.Minutes > 20))
+  and (B_USER.Name LIKE '%ti%' or B_USER.Name LIKE '%bo%' or B_Ingredients.Ingredient_Name LIKE '%Oat Bread%')
+  and Minutes is NOT NULL
+  and AVGRating is NOT NULL
+  and Total_Review is NOT NULL
+GROUP BY Minutes, NAME1
+ORDER BY Minutes;
+
+
+
+Description10: Display the name of the recipe, the name of the reviewer, total time of review, review content of the user who contribute the meal and the averaging of the #and cooking minutes and total review of the meal according to the recipe name, certain characteristics of the user i.e. first_name, last_name etc. 
+
+
+
+#Query 11
+WITH Rating_T AS (SELECT Recipe_ID, SUM(Rate) / COUNT(*) AS AVGRating, COUNT(*) AS Total_Review
+                  FROM B_Review_Belong_To
+                  GROUP BY Recipe_ID
+),
+     Rating_By_Me AS (SELECT Recipe_ID, Rate
+                      FROM B_Review_Belong_To
+                      WHERE User_Id = 37449
+                        AND Rate >= 4
+     ),
+     Recipe_Favorite AS (
+         SELECT RT.Recipe_Id
+         FROM Rating_T RT
+                  JOIN Rating_By_Me RBM ON RT.Recipe_Id = RBM.Recipe_Id
+         WHERE RT.AVGRating >= 4
+           AND Total_Review >= 200
+     ),
+     Ingredient_Favorite AS (
+         SELECT Ingredient_Id
+         FROM Recipe_Favorite rf
+                  JOIN B_Recipe_Ingredient ri
+         WHERE ri.Recipe_Id = rf.Recipe_Id
+         GROUP BY Ingredient_Id
+         ORDER BY COUNT(*) DESC
+     )
+SELECT rf.Recipe_Id, count(*) AS Recommendation_Rate
+FROM Ingredient_Favorite f
+         JOIN B_Recipe_Ingredient ri ON ri.Ingredient_Id = f.Ingredient_Id
+         JOIN Recipe_Favorite rf ON rf.Recipe_Id = ri.Recipe_Id
+GROUP BY rf.Recipe_Id
+ORDER BY count(*) DESC;
+
+
+
+Description11: Given userID 37449, according to his review >= 4 and the overall rating of the recipe >=4 and total_review>=200, analyze the ingredient in those recipes and then recommend similar recipe which consists of similar ingredients
+
+
+
+#Query 12 -- 27s
+WITH Rating_T AS (SELECT Recipe_ID, SUM(Rate) / COUNT(*) AS AVGRating, COUNT(*) AS Total_Review
+                  FROM B_Review_Belong_To
+                  GROUP BY Recipe_ID
+),
+     Rating_By_Me AS (SELECT Recipe_ID, Rate
+                      FROM B_Review_Belong_To
+                      WHERE (Review_Content LIKE '%good%' or Review_Content LIKE '%ok%' or
+                             Review_Content LIKE '%love%' or Rate >= 4)
+                        AND User_Id = 383346 OR User_Id = 169430 OR User_Id = 37449
+#                             383346
+     ),
+     Recipe_Favorite AS (
+         SELECT RT.Recipe_Id, AVGRating, Total_Review
+         FROM Rating_T RT
+                  JOIN Rating_By_Me RBM ON RT.Recipe_Id = RBM.Recipe_Id
+         WHERE AVGRating >= 3.5
+           AND Total_Review >= 50
+     ),
+     Rating_Similar AS (SELECT User_Id, count(*) AS common_recipe
+                        FROM B_Review_Belong_To
+                                 JOIN Recipe_Favorite ON Recipe_Favorite.Recipe_Id = B_Review_Belong_To.Recipe_Id
+                        WHERE B_Review_Belong_To.Rate >= 4
+                        GROUP BY User_Id
+                        ORDER BY COUNT(*) DESC
+     ),
+     Ingredient_Favorite AS (
+         SELECT Ingredient_Id
+         FROM Recipe_Favorite rf
+                  JOIN B_Recipe_Ingredient ri
+         WHERE ri.Recipe_Id = rf.Recipe_Id
+         GROUP BY Ingredient_Id
+         ORDER BY COUNT(*) DESC
+     ),
+     recomm_by_ingre AS (
+         SELECT rf.Recipe_Id, COUNT(*) AS Recommendation_Rate
+         FROM Ingredient_Favorite f
+                  JOIN B_Recipe_Ingredient ri ON ri.Ingredient_Id = f.Ingredient_Id
+                  JOIN Recipe_Favorite rf ON rf.Recipe_Id = ri.Recipe_Id
+         GROUP BY rf.Recipe_Id
+         ORDER BY COUNT(*) DESC
+     ),
+     recomm_by_similar_user AS (
+         SELECT rbt.Recipe_Id, count(*) AS Recommendation_Rate, rt.Total_Review, rt.AVGRating, Rate
+         FROM Rating_Similar rs
+                  JOIN B_Review_Belong_To rbt ON rs.User_Id = rbt.User_Id
+                  JOIN Rating_T rt ON rt.Recipe_Id = rbt.Recipe_Id
+         GROUP BY Recipe_Id
+         HAVING AVGRating >= 4
+            AND Total_Review >= 200
+         ORDER BY count(*) DESC
+     )
+# select *
+# from recomm_by_similar_user;
+SELECT recomm_by_ingre.Recipe_Id, Name, Steps, Descriptions
+FROM recomm_by_ingre
+         JOIN recomm_by_similar_user ON recomm_by_ingre.Recipe_Id = recomm_by_similar_user.Recipe_Id
+         JOIN B_Recipe ON recomm_by_ingre.Recipe_Id = B_Recipe.Recipe_Id
+         JOIN B_Cook_information ON B_Recipe.Recipe_Id = B_Cook_information.Cook_Id
+         JOIN B_Review_Belong_To BRBT ON B_Recipe.Recipe_Id = BRBT.Recipe_Id
+WHERE Review_Content LIKE '%good%'
+   OR Review_Content LIKE '%ok%'
+   OR Review_Content LIKE '%love%'
+   OR Review_Content LIKE '%happy%';
+
+
+
+Description12: Given a group of users, find the recipes he likes(define as rate greater or equal than 4 or review content contains positive keywords), according to his review, pick those overall “good” recipe (define as a recipe has average rating >=3.5 and has more than 50 meaningful reviews, find the users who reviewed similar recipe and like them as well, label them as similar users, look their likes and then combine with the ingredients he likes most, recommend similar recipe
+
+
+
+#Query 13 -- 32s
+WITH Rating_T AS (SELECT Recipe_ID, SUM(Rate) / COUNT(*) AS AVGRating, COUNT(*) AS Total_Review
+                  FROM B_Review_Belong_To
+                  GROUP BY Recipe_ID
+),
+     Rating_By_Me AS (SELECT Recipe_ID, Rate
+                      FROM B_Review_Belong_To
+                      WHERE User_Id = 383346
+                         or User_Id = 169430
+                          AND Rate >= 4
+     ),
+     Recipe_Favorite AS (
+         SELECT RT.Recipe_Id, AVGRating, Total_Review
+         FROM Rating_T RT
+                  JOIN Rating_By_Me RBM ON RT.Recipe_Id = RBM.Recipe_Id
+         WHERE AVGRating >= 4
+            or Total_Review >= 50
+     ),
+     Ingredient_Favorite AS (
+         select Ingredient_Id
+         from Recipe_Favorite rf
+                  join B_Recipe_Ingredient ri
+         where ri.Recipe_Id = rf.Recipe_Id
+         group by Ingredient_Id
+         order by count(*) desc
+     ),
+     recomm_by_ingre AS (
+         select rf.Recipe_Id, count(*) AS Recommendation_Rate
+         from Ingredient_Favorite f
+                  join B_Recipe_Ingredient ri on ri.Ingredient_Id = f.Ingredient_Id
+                  join Recipe_Favorite rf on rf.Recipe_Id = ri.Recipe_Id
+         group by rf.Recipe_Id
+         order by count(*) desc
+     ),
+     Rating_Similar AS (SELECT User_Id, count(*) AS common_recipe
+                        FROM B_Review_Belong_To
+                                 join Recipe_Favorite on Recipe_Favorite.Recipe_Id = B_Review_Belong_To.Recipe_Id
+                        where B_Review_Belong_To.Rate >= 4
+                        group by User_Id
+                        order by count(*) desc
+     ),
+
+     recomm_by_similar_user AS (
+         select rbt.Recipe_Id, count(*) AS Recommendation_Rate, rt.Total_Review, rt.AVGRating, Rate
+         from Rating_Similar rs
+                  join B_Review_Belong_To rbt on rs.User_Id = rbt.User_Id
+                  join Rating_T rt on rt.Recipe_Id = rbt.Recipe_Id
+         group by Recipe_Id
+         having AVGRating > 4
+            and Total_Review > 200
+         order by count(*) desc
+     )
+select recomm_by_ingre.Recipe_Id, Name, Steps, Descriptions
+from recomm_by_ingre
+         join recomm_by_similar_user on recomm_by_ingre.Recipe_Id = recomm_by_similar_user.Recipe_Id
+         join B_Recipe on recomm_by_ingre.Recipe_Id = B_Recipe.Recipe_Id
+         join B_Cook_information on B_Recipe.Recipe_Id = B_Cook_information.Cook_Id;
+
+
+Description13:
+Given certain good review content, according to those review content with overall rating of the recipe >=4 and total_review>=200, analyze the ingredient in those recipes and then recommend similar recipe which consists of similar ingredients.
+
+
+
+
