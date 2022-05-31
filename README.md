@@ -17,6 +17,9 @@ Have Milestone 2 proposal as pdf file in Milestone 2 directory.
 ### -- Milestone 3
 Have 10+ queries as txt file in Milestone 3 directory.
 
+### -- Milestone 4
+We have our api documentation in Milestone 4 directory.
+
 ## Colab repository
 https://drive.google.com/drive/folders/1wkJLJDAFukA6iBm3zGEZTf5BiMADPqbu?usp=sharing
 
