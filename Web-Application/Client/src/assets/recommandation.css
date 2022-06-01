@@ -1,0 +1,16 @@
+.recommandation-curtain {
+    position: relative;
+    left: 15%;
+    background-color: rgb(255, 255, 255);
+    width: 70%;
+    height: 10%;
+    border-radius: 30px;
+    box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+    text-align: center;
+}
+
+.tip {
+    white-space: pre-wrap;
+    text-align: left;
+    margin-left: 5%;
+}

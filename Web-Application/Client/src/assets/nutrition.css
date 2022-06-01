@@ -1,0 +1,27 @@
+.site-page-header {
+    border: 2px solid rgb(235, 237, 240);
+    color: aliceblue;
+    text-align: center;
+    font-family: Papyrus, fantasy;
+    font-size: xx-large;
+    background-color: rgb(93, 196, 233);
+    padding: 5px;
+}
+
+.nutrition-curtain {
+    z-index: 2;
+    position: absolute;
+    left: 40%;
+    top: 50%;
+    background-color: rgb(255, 255, 255);
+    width: 20%;
+    height: 10%;
+    border-radius: 30px;
+    box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+    text-align: center;
+}
+
+.corr {
+    margin-top: 3%;
+    white-space: pre-wrap;
+}

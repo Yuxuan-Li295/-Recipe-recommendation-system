@@ -1,0 +1,54 @@
+.site-page-header {
+    border: 2px solid rgb(235, 237, 240);
+    color: aliceblue;
+    text-align: center;
+    font-family: Papyrus, fantasy;
+    font-size: xx-large;
+    background-color: rgb(93, 196, 233);
+    padding: 5px;
+}
+
+.img-css {
+    opacity: 0.5;
+    width: 100%;
+}
+
+.img-css:hover {
+    opacity: 1;
+}
+
+.background {
+    text-align: center;
+}
+
+.parent {
+    position: relative;
+    width: 100%;
+}
+
+.pastry-img {
+    background-image: url('./img/pastry.jpg');
+    width: 100%;
+}
+
+
+.curtain {
+    z-index: 2;
+    position: absolute;
+    left: 20%;
+    top: 25%;
+    background-color: rgb(255, 255, 255);
+    width: 60%;
+    height: 10%;
+    border-radius: 30px;
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+}
+
+.text {
+    margin-top: 5%;
+}
+
+.button {
+    margin-top: 5%;
+    margin-left: 70%;
+}
