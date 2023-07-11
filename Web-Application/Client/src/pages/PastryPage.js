@@ -31,7 +31,12 @@ const recipeColumns = [
     dataIndex: 'RecipeName',
     key: 'RecipeName',
     sorter: (a, b) => a.RecipeName.localeCompare(b.RecipeName),
-    render: (text, row) => <a href={`/pastry?recipeName=${row.RecipeName}`}>{text}</a>,
+    render: ((text, row) => {
+      if (row.RecipeName) {
+        return <a href={`/pastry?recipeName=${row.RecipeName || ''}`}>{text || ''}</a>;
+      }
+      return null;
+    }),
   },
   {
     title: 'Author',
@@ -112,11 +117,23 @@ class RecipePage extends React.Component {
       null,
       null,
     ).then((res) => {
-      this.setState({ pastryResults: res.results });
-    });
+      const validResults = res.results.filter((recipe) => recipe.RecipeName !== undefined);
+      this.setState({ pastryResults: validResults });
+    })
+      .catch((error) => {
+        console.error('An error occurred while fetching pastries:', error);
+      });
     getPastry(this.state.selectedPastryId).then((res) => {
-      this.setState({ selectedPastryDetails: res.results[0] });
-    });
+      // Check if the result is valid before setting the state.
+      if (res.results[0] && res.results[0].RecipeName) {
+        this.setState({ selectedPastryDetails: res.results[0] });
+      } else {
+        console.log('Invalid pastry data:', res.results[0]);
+      }
+    })
+      .catch((error) => {
+        console.error('An error occurred while fetching the pastry:', error);
+      });
     getReview(this.state.selectedPastryId).then((res) => {
       this.setState({ selectedPastryReviews: res.results });
     });

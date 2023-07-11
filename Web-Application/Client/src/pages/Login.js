@@ -3,7 +3,6 @@
 import { React, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../assets/app.css';
-import LoginGithub from 'react-login-github';
 import ReactGoogleLogin from 'react-google-login';
 import checkUser from '../components/userDB';
 
@@ -51,15 +50,13 @@ function Login() {
             onSuccess={onSuccess}
             onFailure={onFailure}
           />
-          <div className="github" style={{ backgroundColor: 'blue' }}>
-            <LoginGithub
-              className="github"
-              clientId="45b212e3d94e55c74663"
-              onSuccess={onSuccess}
-              onFailure={onFailure}
-            />
+          <div
+            className="github"
+            style={{ backgroundColor: 'blue' }}
+            onClick={() => { window.location.href = '/auth/github'; }}
+          >
+            Login with GitHub
           </div>
-
         </div>
         <div className="center">
           <div className="line" />

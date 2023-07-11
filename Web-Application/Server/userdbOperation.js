@@ -1,4 +1,4 @@
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectIdectId } = require('mongodb');
 
 const connect = async (url) => {
   try {
@@ -11,6 +11,21 @@ const connect = async (url) => {
   } catch (err) {
     console.error(err);
     throw new Error('could not connect to the db');
+  }
+};
+
+const findOrCreate = async (db, query) => {
+  try {
+    let user = await db.collection('user').findOne(query);
+    
+    if (!user) {
+      const result = await db.collection('user').insertOne(query);
+      user = result.ops[0];
+    }
+
+    return user;
+  } catch (e) {
+    throw new Error('Failed to find or create user');
   }
 };
 
@@ -30,4 +45,5 @@ const checkUser = async (
 module.exports = {
   connect,
   checkUser,
+  findOrCreate,
 };

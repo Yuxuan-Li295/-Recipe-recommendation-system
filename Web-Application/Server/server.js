@@ -4,12 +4,37 @@ const path = require('path');
 const routes = require('./routes');
 const config = require('./config.json');
 const userlib = require('./userdbOperation');
+const passport = require('passport');
+const GitHubStrategy = require('passport-github').Strategy;
+
 
 const app = express();
 let db;
-const url = 'mongodb+srv://cis350:cis350@cluster0.ivirc.mongodb.net/cis550?retryWrites=true&w=majority';
+const url = 'mongodb+srv://liyux:Ashlyx1215.@recipe.mqzojkr.mongodb.net/?retryWrites=true&w=majority';
 
 require('dotenv').config();
+
+passport.use(new GitHubStrategy({
+  clientID: "213bc46cb431985fbf28",
+  clientSecret: "0e3fb9e0657ee102033cf03f76dc2b27ba2315b5",
+  callbackURL: "http://localhost:3000/auth/github/callback"
+},
+function(profile, cb) {
+  userlib.findOrCreate({ githubId: profile.id }, function (err, user) {
+    return cb(err, user);
+  });
+}));
+
+passport.serializeUser(function(user, done) {
+  done(null, user._id);  // Here we are using the MongoDB user._id as the session identifier
+});
+
+passport.deserializeUser(function(id, done) {
+  userlib.findUserById(id, function(err, user) {
+    done(err, user);
+  });
+});
+
 
 app.use(express.json());
 // whitelist localhost 3000
@@ -20,7 +45,18 @@ app.use(
 );
 app.use(cors({ credentials: true, origin: true }));
 app.use(express.static(path.join(__dirname, '../client/build')));
-
+app.use(passport.initialize());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors({ credentials: true, origin: true }));
+app.use(express.static(path.join(__dirname, '../client/build')));
+app.get('/auth/github',
+  passport.authenticate('github'));
+app.get('/auth/github/callback',
+  passport.authenticate('github', { failureRedirect: '/login' }),
+  function(req, res) {
+    res.redirect('/');
+  });
 // Route - search pastry
 app.get('/search/pastry', routes.searchPastry);
 
