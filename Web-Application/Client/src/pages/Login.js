@@ -38,7 +38,9 @@ function Login() {
 
   const onSuccess = () => navigate('/homepage');
   const onFailure = (response) => console.error(response);
-
+  const handleGithubLogin = () => {
+    window.location.replace('http://localhost:8080/auth/github');
+  };
   return (
     <div className="login">
       <h1 className="loginTitle">Choose a Login Method</h1>
@@ -53,7 +55,7 @@ function Login() {
           <div
             className="github"
             style={{ backgroundColor: 'blue' }}
-            onClick={() => { window.location.href = '/auth/github'; }}
+            onClick={handleGithubLogin}
           >
             Login with GitHub
           </div>

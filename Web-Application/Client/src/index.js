@@ -1,29 +1,34 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {
-  BrowserRouter as Router,
   Route,
+  BrowserRouter as Router,
   Routes,
 } from 'react-router-dom';
 
+import 'antd/dist/antd.min.css';
+import GithubCallback from './pages/GithubCallback';
 import HomePage from './pages/HomePage';
 import Login from './pages/Login';
 import MainDishes from './pages/MainDishPage';
-import Pastry from './pages/PastryPage';
-import User from './pages/UserPage';
-import PersonReviewPage from './pages/ProfilePage';
 import NutritionCompare from './pages/NutritionComparePage';
-import 'antd/dist/antd.min.css';
-
+import Pastry from './pages/PastryPage';
+import PersonReviewPage from './pages/ProfilePage';
+import User from './pages/UserPage';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'shards-ui/dist/css/shards.min.css';
-import Review from './pages/ReviewPage';
 import Recommendation from './pages/RecommendationPage';
+import Review from './pages/ReviewPage';
 
 ReactDOM.render(
   <div>
     <Router>
       <Routes>
+        <Route
+          exact
+          path="/auth/github/callback"
+          element={<GithubCallback />}
+        />
         <Route
           exact
           path="/"

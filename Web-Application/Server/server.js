@@ -17,10 +17,11 @@ require('dotenv').config();
 passport.use(new GitHubStrategy({
   clientID: "213bc46cb431985fbf28",
   clientSecret: "0e3fb9e0657ee102033cf03f76dc2b27ba2315b5",
-  callbackURL: "http://localhost:3000/auth/github/callback"
+  callbackURL: "http://localhost:8080/auth/github/callback"
 },
 function(profile, cb) {
   userlib.findOrCreate({ githubId: profile.id }, function (err, user) {
+    console.log('findOrCreate result:', err, user); 
     return cb(err, user);
   });
 }));
@@ -50,12 +51,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({ credentials: true, origin: true }));
 app.use(express.static(path.join(__dirname, '../client/build')));
-app.get('/auth/github',
-  passport.authenticate('github'));
 app.get('/auth/github/callback',
   passport.authenticate('github', { failureRedirect: '/login' }),
   function(req, res) {
     res.redirect('/');
+  });
+app.get('/auth/github',(req,res)=>{
+  //redirect to the actual Github authorization URL
+  res.redirect('https://github.com/login/oauth/authorize?client_id=213bc46cb431985fbf28');
   });
 // Route - search pastry
 app.get('/search/pastry', routes.searchPastry);
